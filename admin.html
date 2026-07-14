@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理后台 | 浅序云阁</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Noto Sans SC', 'sans-serif'],
+            display: ['ZCOOL KuaiLe', 'cursive'],
+          },
+          colors: {
+            ice: {
+              50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc',
+              400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1',
+              800: '#075985', 900: '#0c4a6e',
+            },
+            mist: {
+              50: '#faf5ff', 100: '#f3e8ff', 200: '#e9d5ff', 300: '#d8b4fe',
+              400: '#c084fc', 500: '#a855f7', 600: '#9333ea', 700: '#7e22ce',
+              800: '#6b21a8', 900: '#581c87',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.45);
+      --glass-border: rgba(255, 255, 255, 0.6);
+      --glass-shadow: 0 8px 32px rgba(14, 165, 233, 0.12);
+      --primary-gradient: linear-gradient(135deg, #7dd3fc 0%, #c084fc 50%, #bae6fd 100%);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --bg-primary: #f0f9ff;
+    }
+    .dark {
+      --glass-bg: rgba(15, 23, 42, 0.55);
+      --glass-border: rgba(147, 197, 253, 0.15);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #7c3aed 50%, #0284c7 100%);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --bg-primary: #0f172a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.5s ease, color 0.5s ease;
+      min-height: 100vh;
+    }
+
+    /* 冰晶粒子 */
+    #particles-canvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* 毛玻璃 */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow: var(--glass-shadow);
+    }
+
+    /* 渐变文字 */
+    .gradient-text {
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* 按钮回弹 */
+    .btn-bounce {
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .btn-bounce:active { transform: scale(0.92); }
+    .btn-bounce:hover { transform: translateY(-2px); }
+
+    /* 输入框 */
+    .input-glass {
+      background: rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(125, 211, 252, 0.3);
+      border-radius: 16px;
+      padding: 12px 16px;
+      transition: all 0.3s ease;
+      outline: none;
+      width: 100%;
+      color: var(--text-primary);
+    }
+    .input-glass:focus {
+      border-color: #7dd3fc;
+      box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.2);
+      background: rgba(255, 255, 255, 0.5);
+    }
+    .dark .input-glass {
+      background: rgba(15, 23, 42, 0.4);
+      border-color: rgba(147, 197, 253, 0.15);
+    }
+    .dark .input-glass:focus {
+      background: rgba(15, 23, 42, 0.6);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+    }
+
+    /* 项目卡片 */
+    .project-item {
+      transition: all 0.3s ease;
+    }
+    .project-item:hover {
+      transform: translateX(4px);
+      border-color: rgba(125, 211, 252, 0.5);
+    }
+
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      padding: 14px 24px;
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      z-index: 9999;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .toast.show { transform: translateX(0); }
+    .toast-success {
+      background: linear-gradient(135deg, rgba(125,211,252,0.9), rgba(192,132,252,0.9));
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .toast-error {
+      background: linear-gradient(135deg, rgba(248,113,113,0.9), rgba(251,146,60,0.9));
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    /* 淡入 */
+    .fade-in {
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* 滚动条 */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #7dd3fc, #c084fc);
+      border-radius: 3px;
+    }
+
+    /* 密码输入 */
+    .password-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--text-primary);
+      opacity: 0.3;
+      transition: all 0.2s ease;
+    }
+    .password-dot.filled { opacity: 1; background: linear-gradient(135deg, #7dd3fc, #c084fc); }
+  </style>
+</head>
+<body class="min-h-screen relative">
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Toast 提示 -->
+  <div id="toast" class="toast"></div>
+
+  <!-- 登录页 -->
+  <div id="login-page" class="relative z-10 min-h-screen flex items-center justify-center px-6">
+    <div class="glass-card p-10 md:p-14 w-full max-w-md text-center">
+      <div class="mb-8">
+        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-ice-300 to-mist-300 flex items-center justify-center">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h1 class="font-display text-2xl gradient-text mb-2">浅序云阁 · 管理后台</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">请输入密码进入编辑面板</p>
+      </div>
+      
+      <div class="relative mb-6">
+        <input 
+          type="password" 
+          id="password-input" 
+          class="input-glass text-center text-lg tracking-widest" 
+          placeholder="输入密码"
+          maxlength="20"
+          onkeydown="if(event.key==='Enter')Auth.login()"
+        >
+      </div>
+      
+      <button onclick="Auth.login()" class="btn-bounce w-full py-3 rounded-full bg-gradient-to-r from-ice-400 to-mist-400 text-white font-medium shadow-lg shadow-ice-400/30 hover:shadow-xl">
+        进入云阁
+      </button>
+      
+      <div class="mt-6 flex justify-center gap-2">
+        <a href="index.html" class="text-sm text-ice-500 dark:text-ice-400 hover:text-ice-600 transition-colors">
+          ← 返回首页
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理面板 -->
+  <div id="admin-panel" class="relative z-10 hidden min-h-screen">
+    <!-- 顶部栏 -->
+    <header class="glass-card mx-4 mt-4 px-6 py-4 flex items-center justify-between sticky top-4 z-50">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-ice-400 to-mist-400 flex items-center justify-center">
+          <span class="text-white font-bold text-sm">凝</span>
+        </div>
+        <div>
+          <h1 class="font-display text-lg gradient-text">浅序云阁 · 管理后台</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">凝冰的编辑面板</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="Theme.toggle()" class="btn-bounce p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10" aria-label="切换主题">
+          <svg id="theme-icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="theme-icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+        <button onclick="Auth.logout()" class="btn-bounce px-4 py-2 rounded-full glass-card text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+          退出登录
+        </button>
+        <a href="index.html" target="_blank" class="btn-bounce px-4 py-2 rounded-full glass-card text-sm text-ice-600 dark:text-ice-300 hover:bg-ice-50 dark:hover:bg-ice-900/30">
+          预览首页
+        </a>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <!-- 简介编辑 -->
+      <section class="glass-card p-6 md:p-8 fade-in">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-ice-300 to-mist-300 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <h2 class="text-xl font-bold gradient-text">个人简介</h2>
+        </div>
+        <textarea id="about-input" class="input-glass min-h-[120px] resize-y mb-4" placeholder="在这里输入你的个人简介..."></textarea>
+        <button onclick="Content.saveAbout()" class="btn-bounce px-6 py-2 rounded-full bg-gradient-to-r from-ice-400 to-mist-400 text-white font-medium text-sm shadow-lg shadow-ice-400/20">
+          保存简介
+        </button>
+      </section>
+
+      <!-- 项目管理 -->
+      <section class="glass-card p-6 md:p-8 fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-ice-300 to-mist-300 flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+            <h2 class="text-xl font-bold gradient-text">项目管理</h2>
+          </div>
+          <button onclick="Project.clearAll()" class="btn-bounce px-4 py-2 rounded-full text-sm text-red-500 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20">
+            清空全部
+          </button>
+        </div>
+
+        <!-- 新增/编辑表单 -->
+        <div class="glass-card p-5 mb-6 bg-white/30 dark:bg-black/20">
+          <h3 id="project-form-title" class="text-sm font-bold text-slate-600 dark:text-slate-300 mb-4">新增项目</h3>
+          <input type="hidden" id="project-edit-id" value="">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">项目名称 *</label>
+              <input type="text" id="project-name" class="input-glass" placeholder="例如：我的个人博客">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">GitHub 地址</label>
+              <input type="text" id="project-github" class="input-glass" placeholder="https://github.com/xxx/xxx">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">项目简介 *</label>
+            <textarea id="project-desc" class="input-glass min-h-[80px] resize-y" placeholder="简要描述这个项目..."></textarea>
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">图片链接</label>
+            <input type="text" id="project-image" class="input-glass" placeholder="https://... 或直接粘贴图片URL">
+          </div>
+          <div class="flex gap-3">
+            <button onclick="Project.save()" class="btn-bounce px-6 py-2 rounded-full bg-gradient-to-r from-ice-400 to-mist-400 text-white font-medium text-sm shadow-lg shadow-ice-400/20">
+              <span id="project-btn-text">添加项目</span>
+            </button>
+            <button onclick="Project.cancelEdit()" id="project-cancel-btn" class="btn-bounce px-6 py-2 rounded-full glass-card text-sm text-slate-500 hidden">
+              取消编辑
+            </button>
+          </div>
+        </div>
+
+        <!-- 项目列表 -->
+        <div id="projects-list" class="space-y-3">
+          <!-- 动态渲染 -->
+        </div>
+        <div id="projects-list-empty" class="text-center py-8 text-slate-400 text-sm">
+          暂无项目，请在上方添加
+        </div>
+      </section>
+
+      <!-- 兴趣标签 -->
+      <section class="glass-card p-6 md:p-8 fade-in">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-ice-300 to-mist-300 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+          </div>
+          <h2 class="text-xl font-bold gradient-text">兴趣标签</h2>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">用逗号分隔多个标签，例如：编程, AI绘画, 二次元, 音乐</p>
+        <textarea id="tags-input" class="input-glass min-h-[80px] resize-y mb-4" placeholder="输入你的兴趣标签..."></textarea>
+        <button onclick="Content.saveTags()" class="btn-bounce px-6 py-2 rounded-full bg-gradient-to-r from-ice-400 to-mist-400 text-white font-medium text-sm shadow-lg shadow-ice-400/20">
+          保存标签
+        </button>
+      </section>
+
+      <!-- 云阁介绍 -->
+      <section class="glass-card p-6 md:p-8 fade-in">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-ice-300 to-mist-300 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          </div>
+          <h2 class="text-xl font-bold gradient-text">云阁介绍</h2>
+        </div>
+        <textarea id="pavilion-input" class="input-glass min-h-[120px] resize-y mb-4" placeholder="介绍你的云阁..."></textarea>
+        <button onclick="Content.savePavilion()" class="btn-bounce px-6 py-2 rounded-full bg-gradient-to-r from-ice-400 to-mist-400 text-white font-medium text-sm shadow-lg shadow-ice-400/20">
+          保存介绍
+        </button>
+      </section>
+
+      <!-- 联系方式 -->
+      <section class="glass-card p-6 md:p-8 fade-in">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-ice-300 to-mist-300 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <h2 class="text-xl font-bold gradient-text">联系方式</h2>
+        </div>
+        <textarea id="contact-input" class="input-glass min-h-[120px] resize-y mb-4" placeholder="留下你的联系方式..."></textarea>
+        <button onclick="Content.saveContact()" class="btn-bounce px-6 py-2 rounded-full bg-gradient-to-r from-ice-400 to-mist-400 text-white font-medium text-sm shadow-lg shadow-ice-400/20">
+          保存联系方式
+        </button>
+      </section>
+
+      <!-- 危险操作区 -->
+      <section class="glass-card p-6 md:p-8 fade-in border-red-200 dark:border-red-900/30">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-400 to-orange-400 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+          <h2 class="text-xl font-bold text-red-500">危险操作</h2>
+        </div>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">此操作将清空所有内容，恢复到初始空白状态，不可恢复！</p>
+        
+        <button onclick="Content.clearAll()" class="btn-bounce px-6 py-2 rounded-full bg-gradient-to-r from-red-400 to-orange-400 text-white font-medium text-sm shadow-lg shadow-red-400/20">
+          一键清空全站内容
+        </button>
+      </section>
+
+      <div class="h-8"></div>
+    </main>
+  </div>
+
+  <script>
+    // ==================== 数据存储 ====================
+    const Storage = {
+      get(key, defaultVal = null) {
+        try {
+          const data = localStorage.getItem('nb_' + key);
+          return data ? JSON.parse(data) : defaultVal;
+        } catch(e) { return defaultVal; }
+      },
+      set(key, value) {
+        localStorage.setItem('nb_' + key, JSON.stringify(value));
+      },
+      remove(key) {
+        localStorage.removeItem('nb_' + key);
+      },
+      clear() {
+        Object.keys(localStorage).forEach(k => {
+          if(k.startsWith('nb_')) localStorage.removeItem(k);
+        });
+      }
+    };
+
+    // ==================== Toast 提示 ====================
+    const Toast = {
+      show(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast toast-' + type;
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      }
+    };
+
+    // ==================== 主题 ====================
+    const Theme = {
+      init() {
+        const saved = Storage.get('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = saved === 'dark' || (!saved && prefersDark);
+        if(isDark) document.documentElement.classList.add('dark');
+        this.updateIcon(isDark);
+      },
+      toggle() {
+        const isDark = document.documentElement.classList.toggle('dark');
+        Storage.set('theme', isDark ? 'dark' : 'light');
+        this.updateIcon(isDark);
+      },
+      updateIcon(isDark) {
+        const sun = document.getElementById('theme-icon-sun');
+        const moon = document.getElementById('theme-icon-moon');
+        if(sun) sun.classList.toggle('hidden', !isDark);
+        if(moon) moon.classList.toggle('hidden', isDark);
+      }
+    };
+
+    // ==================== 认证 ====================
+    const AUTH_KEY = 'nb_auth';
+    const PASSWORD = 'ningbing';
+
+    const Auth = {
+      init() {
+        // 检查是否已登录
+        if(Storage.get(AUTH_KEY) === true) {
+          this.showPanel();
+        }
+      },
+      login() {
+        const input = document.getElementById('password-input');
+        const pwd = input.value.trim();
+        if(pwd === PASSWORD) {
+          Storage.set(AUTH_KEY, true);
+          this.showPanel();
+          Toast.show('欢迎回来，阁主凝冰！');
+        } else {
+          Toast.show('密码错误，请重新输入', 'error');
+          input.value = '';
+          input.focus();
+        }
+      },
+      logout() {
+        Storage.remove(AUTH_KEY);
+        location.reload();
+      },
+      showPanel() {
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        // 淡入动画
+        setTimeout(() => {
+          document.querySelectorAll('#admin-panel .fade-in').forEach((el, i) => {
+            setTimeout(() => el.classList.add('visible'), i * 100);
+          });
+        }, 50);
+        // 加载数据到表单
+        Content.loadToForm();
+        Project.renderList();
+      }
+    };
+
+    // ==================== 内容管理 ====================
+    const Content = {
+      loadToForm() {
+        document.getElementById('about-input').value = Storage.get('about', '');
+        document.getElementById('tags-input').value = Storage.get('tags', '');
+        document.getElementById('pavilion-input').value = Storage.get('pavilion', '');
+        document.getElementById('contact-input').value = Storage.get('contact', '');
+      },
+      saveAbout() {
+        const val = document.getElementById('about-input').value.trim();
+        Storage.set('about', val);
+        Toast.show('简介已保存');
+      },
+      saveTags() {
+        const val = document.getElementById('tags-input').value.trim();
+        Storage.set('tags', val);
+        Toast.show('标签已保存');
+      },
+      savePavilion() {
+        const val = document.getElementById('pavilion-input').value.trim();
+        Storage.set('pavilion', val);
+        Toast.show('云阁介绍已保存');
+      },
+      saveContact() {
+        const val = document.getElementById('contact-input').value.trim();
+        Storage.set('contact', val);
+        Toast.show('联系方式已保存');
+      },
+      clearAll() {
+        if(!confirm('确定要清空所有内容吗？此操作不可恢复！')) return;
+        Storage.clear();
+        // 重新加载表单
+        this.loadToForm();
+        Project.renderList();
+        Toast.show('全站内容已清空');
+      }
+    };
+
+    // ==================== 项目管理 ====================
+    const Project = {
+      getList() {
+        return Storage.get('projects', []);
+      },
+      saveList(list) {
+        Storage.set('projects', list);
+      },
+      renderList() {
+        const list = this.getList();
+        const container = document.getElementById('projects-list');
+        const empty = document.getElementById('projects-list-empty');
+        
+        if(list.length === 0) {
+          container.innerHTML = '';
+          empty.style.display = 'block';
+          return;
+        }
+        empty.style.display = 'none';
+        
+        container.innerHTML = list.map((p, idx) => `
+          <div class="project-item glass-card p-4 flex items-start gap-4">
+            <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-ice-100 to-mist-100 dark:from-ice-900/50 dark:to-mist-900/30 flex-shrink-0 overflow-hidden">
+              ${p.image ? `<img src="${this.escapeHtml(p.image)}" class="w-full h-full object-cover" onerror="this.style.display='none'">` : 
+                `<div class="w-full h-full flex items-center justify-center text-ice-300 dark:text-ice-700">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>`}
+            </div>
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-slate-800 dark:text-slate-200 truncate">${this.escapeHtml(p.name)}</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">${this.escapeHtml(p.description)}</p>
+              ${p.github ? `<a href="${this.escapeHtml(p.github)}" target="_blank" class="text-xs text-ice-500 hover:text-ice-600 mt-1 inline-block">${this.escapeHtml(p.github)}</a>` : ''}
+            </div>
+            <div class="flex flex-col gap-2 flex-shrink-0">
+              <button onclick="Project.edit(${idx})" class="p-2 rounded-lg hover:bg-ice-100 dark:hover:bg-ice-900/30 text-ice-500 transition-colors" title="编辑">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button onclick="Project.del(${idx})" class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400 transition-colors" title="删除">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      },
+      save() {
+        const name = document.getElementById('project-name').value.trim();
+        const desc = document.getElementById('project-desc').value.trim();
+        const github = document.getElementById('project-github').value.trim();
+        const image = document.getElementById('project-image').value.trim();
+        const editId = document.getElementById('project-edit-id').value;
+        
+        if(!name || !desc) {
+          Toast.show('请填写项目名称和简介', 'error');
+          return;
+        }
+        
+        const list = this.getList();
+        const project = { name, description: desc, github, image };
+        
+        if(editId !== '') {
+          // 编辑模式
+          const idx = parseInt(editId);
+          if(idx >= 0 && idx < list.length) {
+            list[idx] = project;
+            Toast.show('项目已更新');
+          }
+        } else {
+          // 新增模式
+          list.push(project);
+          Toast.show('项目已添加');
+        }
+        
+        this.saveList(list);
+        this.renderList();
+        this.cancelEdit();
+      },
+      edit(idx) {
+        const list = this.getList();
+        if(idx < 0 || idx >= list.length) return;
+        const p = list[idx];
+        
+        document.getElementById('project-name').value = p.name;
+        document.getElementById('project-desc').value = p.description;
+        document.getElementById('project-github').value = p.github || '';
+        document.getElementById('project-image').value = p.image || '';
+        document.getElementById('project-edit-id').value = idx;
+        
+        document.getElementById('project-form-title').textContent = '编辑项目';
+        document.getElementById('project-btn-text').textContent = '保存修改';
+        document.getElementById('project-cancel-btn').classList.remove('hidden');
+        
+        // 滚动到表单
+        document.getElementById('project-form-title').scrollIntoView({ behavior: 'smooth' });
+      },
+      cancelEdit() {
+        document.getElementById('project-name').value = '';
+        document.getElementById('project-desc').value = '';
+        document.getElementById('project-github').value = '';
+        document.getElementById('project-image').value = '';
+        document.getElementById('project-edit-id').value = '';
+        
+        document.getElementById('project-form-title').textContent = '新增项目';
+        document.getElementById('project-btn-text').textContent = '添加项目';
+        document.getElementById('project-cancel-btn').classList.add('hidden');
+      },
+      del(idx) {
+        if(!confirm('确定要删除这个项目吗？')) return;
+        const list = this.getList();
+        if(idx >= 0 && idx < list.length) {
+          list.splice(idx, 1);
+          this.saveList(list);
+          this.renderList();
+          Toast.show('项目已删除');
+        }
+      },
+      clearAll() {
+        if(!confirm('确定要清空所有项目吗？')) return;
+        Storage.set('projects', []);
+        this.renderList();
+        Toast.show('所有项目已清空');
+      },
+      escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+      }
+    };
+
+    // ==================== 冰晶粒子（简化版）====================
+    const Particles = {
+      canvas: null, ctx: null, particles: [],
+      init() {
+        this.canvas = document.getElementById('particles-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.createParticles();
+        this.animate();
+      },
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      },
+      createParticles() {
+        const count = Math.min(30, Math.floor(window.innerWidth / 40));
+        this.particles = [];
+        for(let i = 0; i < count; i++) {
+          this.particles.push({
+            x: Math.random() * this.canvas.width,
+            y: Math.random() * this.canvas.height,
+            size: Math.random() * 2 + 1,
+            speedY: Math.random() * 0.4 + 0.1,
+            speedX: (Math.random() - 0.5) * 0.2,
+            opacity: Math.random() * 0.4 + 0.1,
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.015
+          });
+        }
+      },
+      animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const isDark = document.documentElement.classList.contains('dark');
+        
+        this.particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.rotSpeed;
+          
+          if(p.y > this.canvas.height) { p.y = -10; p.x = Math.random() * this.canvas.width; }
+          if(p.x < -10) p.x = this.canvas.width + 10;
+          if(p.x > this.canvas.width + 10) p.x = -10;
+          
+          this.ctx.save();
+          this.ctx.translate(p.x, p.y);
+          this.ctx.rotate(p.rotation);
+          this.ctx.globalAlpha = p.opacity;
+          
+          const color = isDark ? '192, 132, 252' : '125, 211, 252';
+          this.ctx.fillStyle = `rgba(${color}, ${p.opacity})`;
+          this.ctx.beginPath();
+          for(let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3;
+            const x = Math.cos(angle) * p.size * 2;
+            const y = Math.sin(angle) * p.size * 2;
+            if(i === 0) this.ctx.moveTo(x, y);
+            else this.ctx.lineTo(x, y);
+          }
+          this.ctx.closePath();
+          this.ctx.fill();
+          
+          this.ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.8})`;
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, p.size * 0.4, 0, Math.PI * 2);
+          this.ctx.fill();
+          
+          this.ctx.restore();
+        });
+        
+        requestAnimationFrame(() => this.animate());
+      }
+    };
+
+    // ==================== 初始化 ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      Theme.init();
+      Particles.init();
+      Auth.init();
+    });
+  </script>
+</body>
+</html>
